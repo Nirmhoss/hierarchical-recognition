@@ -1,0 +1,10 @@
+{
+    "epochs": 50,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "superclass_weight": 0.3,
+    "data_augmentation": true,
+    "early_stopping_patience": 15,
+    "model_type": "cnn",
+    "timestamp": "20250424-230646"
+}

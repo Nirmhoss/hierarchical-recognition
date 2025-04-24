@@ -1,0 +1,28 @@
+{
+    "superclass_accuracy": 0.9782,
+    "superclass_precision": 0.978450380583082,
+    "superclass_recall": 0.9782,
+    "superclass_f1": 0.9782397125698074,
+    "class_accuracy": 0.8428,
+    "class_precision": 0.8490969245977452,
+    "class_recall": 0.8428,
+    "class_f1": 0.8407071624490005,
+    "hierarchical_accuracy": 0.841,
+    "consistency_score": 0.9918,
+    "superclass_precision_per_class": {
+        "vehicle": 0.9621212121212122,
+        "animal": 0.9893364928909952
+    },
+    "class_precision_per_class": {
+        "airplane": 0.8776978417266187,
+        "automobile": 0.9157792836398838,
+        "bird": 0.8589449541284404,
+        "cat": 0.80125,
+        "deer": 0.8333333333333334,
+        "dog": 0.8628205128205129,
+        "frog": 0.6811797752808989,
+        "horse": 0.877431906614786,
+        "ship": 0.925777331995988,
+        "truck": 0.85675430643699
+    }
+}
