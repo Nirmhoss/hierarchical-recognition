@@ -1,0 +1,2 @@
+[bandit]
+exclude = /results,/test_images,/venv

@@ -5,150 +5,160 @@ This module defines the CNN-based model architecture with two output heads:
 one for superclass (coarse) classification and one for class (fine-grained) classification.
 """
 
+from typing import Tuple
+
 import tensorflow as tf
-from tensorflow.keras.models import Model
 from tensorflow.keras.layers import (
-    Input, Conv2D, MaxPooling2D, BatchNormalization,
-    Dense, Dropout, Flatten, Activation, GlobalAveragePooling2D
+    Activation,
+    BatchNormalization,
+    Conv2D,
+    Dense,
+    Dropout,
+    GlobalAveragePooling2D,
+    Input,
+    MaxPooling2D,
 )
+from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l2
 
 from data_utils import CLASS_NAMES, SUPERCLASS_NAMES
 
 
-def create_hierarchical_model(input_shape=(32, 32, 3),
-                              num_superclasses=len(SUPERCLASS_NAMES),
-                              num_classes=len(CLASS_NAMES),
-                              l2_reg=0.001):
+def build_hierarchical_model(
+    input_shape: Tuple[int, int, int] = (32, 32, 3),
+    base_filters: int = 32,
+    dropout_rate: float = 0.5,
+    l2_reg: float = 0.001,
+) -> tf.keras.Model:
     """
-    Create a hierarchical CNN model with two output heads.
+    Build a CNN model with hierarchical classification heads.
+
+    This model has two output heads:
+    1. Superclass classification (coarse-grained)
+    2. Class classification (fine-grained)
 
     Args:
         input_shape: Shape of input images (height, width, channels)
-        num_superclasses: Number of superclasses (coarse level)
-        num_classes: Number of classes (fine-grained level)
+        base_filters: Number of base filters for convolutional layers
+        dropout_rate: Dropout rate for regularization
         l2_reg: L2 regularization factor
 
     Returns:
-        A Keras Model with two outputs: one for superclass, one for class
+        Keras Model with hierarchical classification architecture
     """
     # Input layer
-    inputs = Input(shape=input_shape, name='input')
+    inputs = Input(shape=input_shape, name="input")
 
-    # Base CNN layers
-    x = Conv2D(32, (3, 3), padding='same', kernel_regularizer=l2(l2_reg))(inputs)
-    x = BatchNormalization()(x)
-    x = Activation('relu')(x)
-    x = Conv2D(32, (3, 3), padding='same', kernel_regularizer=l2(l2_reg))(x)
-    x = BatchNormalization()(x)
-    x = Activation('relu')(x)
-    x = MaxPooling2D(pool_size=(2, 2))(x)
-    x = Dropout(0.2)(x)
+    # Convolutional blocks
+    x = Conv2D(
+        base_filters,
+        (3, 3),
+        padding="same",
+        kernel_regularizer=l2(l2_reg),
+        name="conv1_1",
+    )(inputs)
+    x = BatchNormalization(name="bn1_1")(x)
+    x = Activation("relu", name="relu1_1")(x)
 
-    x = Conv2D(64, (3, 3), padding='same', kernel_regularizer=l2(l2_reg))(x)
-    x = BatchNormalization()(x)
-    x = Activation('relu')(x)
-    x = Conv2D(64, (3, 3), padding='same', kernel_regularizer=l2(l2_reg))(x)
-    x = BatchNormalization()(x)
-    x = Activation('relu')(x)
-    x = MaxPooling2D(pool_size=(2, 2))(x)
-    x = Dropout(0.3)(x)
+    x = Conv2D(
+        base_filters,
+        (3, 3),
+        padding="same",
+        kernel_regularizer=l2(l2_reg),
+        name="conv1_2",
+    )(x)
+    x = BatchNormalization(name="bn1_2")(x)
+    x = Activation("relu", name="relu1_2")(x)
+    x = MaxPooling2D((2, 2), name="pool1")(x)
 
-    x = Conv2D(128, (3, 3), padding='same', kernel_regularizer=l2(l2_reg))(x)
-    x = BatchNormalization()(x)
-    x = Activation('relu')(x)
-    x = Conv2D(128, (3, 3), padding='same', kernel_regularizer=l2(l2_reg))(x)
-    x = BatchNormalization()(x)
-    x = Activation('relu')(x)
-    x = MaxPooling2D(pool_size=(2, 2))(x)
-    x = Dropout(0.4)(x)
+    # Second block - double the filters
+    x = Conv2D(
+        base_filters * 2,
+        (3, 3),
+        padding="same",
+        kernel_regularizer=l2(l2_reg),
+        name="conv2_1",
+    )(x)
+    x = BatchNormalization(name="bn2_1")(x)
+    x = Activation("relu", name="relu2_1")(x)
 
-    # Shared features
-    shared_features = GlobalAveragePooling2D()(x)
+    x = Conv2D(
+        base_filters * 2,
+        (3, 3),
+        padding="same",
+        kernel_regularizer=l2(l2_reg),
+        name="conv2_2",
+    )(x)
+    x = BatchNormalization(name="bn2_2")(x)
+    x = Activation("relu", name="relu2_2")(x)
+    x = MaxPooling2D((2, 2), name="pool2")(x)
 
-    # Superclass branch
-    superclass_features = Dense(128, kernel_regularizer=l2(l2_reg))(shared_features)
-    superclass_features = BatchNormalization()(superclass_features)
-    superclass_features = Activation('relu')(superclass_features)
-    superclass_features = Dropout(0.5)(superclass_features)
-    superclass_output = Dense(num_superclasses, activation='softmax', name='superclass_output')(superclass_features)
+    # Third block - double the filters again
+    x = Conv2D(
+        base_filters * 4,
+        (3, 3),
+        padding="same",
+        kernel_regularizer=l2(l2_reg),
+        name="conv3_1",
+    )(x)
+    x = BatchNormalization(name="bn3_1")(x)
+    x = Activation("relu", name="relu3_1")(x)
 
-    # Class branch (with superclass information)
-    # We concatenate shared features with superclass prediction to help with class prediction
-    combined_features = tf.keras.layers.concatenate([shared_features, superclass_output])
-
-    class_features = Dense(256, kernel_regularizer=l2(l2_reg))(combined_features)
-    class_features = BatchNormalization()(class_features)
-    class_features = Activation('relu')(class_features)
-    class_features = Dropout(0.5)(class_features)
-    class_output = Dense(num_classes, activation='softmax', name='class_output')(class_features)
-
-    # Create model with two outputs
-    model = Model(inputs=inputs, outputs=[superclass_output, class_output])
-
-    return model
-
-
-def create_hierarchical_resnet(input_shape=(32, 32, 3),
-                               num_superclasses=len(SUPERCLASS_NAMES),
-                               num_classes=len(CLASS_NAMES)):
-    """
-    Create a hierarchical model based on a pre-trained ResNet50.
-    This is an alternative model that leverages transfer learning.
-
-    Args:
-        input_shape: Shape of input images
-        num_superclasses: Number of superclasses (coarse level)
-        num_classes: Number of classes (fine-grained level)
-
-    Returns:
-        A Keras Model with two outputs
-    """
-    # Load ResNet50 without the top layers
-    base_model = tf.keras.applications.ResNet50(
-        include_top=False,
-        weights='imagenet',
-        input_shape=input_shape
-    )
-
-    # Freeze the base model layers
-    base_model.trainable = False
-
-    # Add custom layers on top
-    inputs = Input(shape=input_shape)
-
-    # Preprocess input
-    x = tf.keras.applications.resnet50.preprocess_input(inputs)
-
-    # Run through the base model
-    x = base_model(x, training=False)
+    x = Conv2D(
+        base_filters * 4,
+        (3, 3),
+        padding="same",
+        kernel_regularizer=l2(l2_reg),
+        name="conv3_2",
+    )(x)
+    x = BatchNormalization(name="bn3_2")(x)
+    x = Activation("relu", name="relu3_2")(x)
 
     # Global average pooling
-    x = GlobalAveragePooling2D()(x)
+    x = GlobalAveragePooling2D(name="gap")(x)
 
-    # Superclass branch
-    superclass_features = Dense(128)(x)
-    superclass_features = BatchNormalization()(superclass_features)
-    superclass_features = Activation('relu')(superclass_features)
-    superclass_features = Dropout(0.5)(superclass_features)
-    superclass_output = Dense(num_superclasses, activation='softmax', name='superclass_output')(superclass_features)
+    # Dropout for regularization
+    x = Dropout(dropout_rate, name="dropout")(x)
 
-    # Class branch (with superclass information)
-    combined_features = tf.keras.layers.concatenate([x, superclass_output])
+    # Shared dense layer
+    shared_features = Dense(
+        256,
+        activation="relu",
+        kernel_regularizer=l2(l2_reg),
+        name="shared_dense",
+    )(x)
 
-    class_features = Dense(256)(combined_features)
-    class_features = BatchNormalization()(class_features)
-    class_features = Activation('relu')(class_features)
-    class_features = Dropout(0.5)(class_features)
-    class_output = Dense(num_classes, activation='softmax', name='class_output')(class_features)
+    # Superclass classification head
+    superclass_output = Dense(
+        len(SUPERCLASS_NAMES),
+        activation="softmax",
+        name="superclass_output",
+        kernel_regularizer=l2(l2_reg),
+    )(shared_features)
+
+    # Class classification head
+    class_output = Dense(
+        len(CLASS_NAMES),
+        activation="softmax",
+        name="class_output",
+        kernel_regularizer=l2(l2_reg),
+    )(shared_features)
 
     # Create model with two outputs
-    model = Model(inputs=inputs, outputs=[superclass_output, class_output])
+    model = Model(
+        inputs=inputs,
+        outputs=[superclass_output, class_output],
+        name="hierarchical_cnn",
+    )
 
     return model
 
 
-def compile_model(model, learning_rate=0.001, superclass_weight=0.3):
+def compile_model(
+    model: tf.keras.Model,
+    learning_rate: float = 0.001,
+    superclass_weight: float = 0.3,
+) -> tf.keras.Model:
     """
     Compile the model with appropriate loss functions and metrics.
 
@@ -163,20 +173,26 @@ def compile_model(model, learning_rate=0.001, superclass_weight=0.3):
     """
     # Define loss functions
     losses = {
-        'superclass_output': 'categorical_crossentropy',
-        'class_output': 'categorical_crossentropy'
+        "superclass_output": "categorical_crossentropy",
+        "class_output": "categorical_crossentropy",
     }
 
     # Define loss weights for multi-task learning
     loss_weights = {
-        'superclass_output': superclass_weight,
-        'class_output': 1.0 - superclass_weight
+        "superclass_output": superclass_weight,
+        "class_output": 1.0 - superclass_weight,
     }
 
     # Define metrics
     metrics = {
-        'superclass_output': ['accuracy', tf.keras.metrics.TopKCategoricalAccuracy(k=2, name='top2_accuracy')],
-        'class_output': ['accuracy', tf.keras.metrics.TopKCategoricalAccuracy(k=3, name='top3_accuracy')]
+        "superclass_output": [
+            "accuracy",
+            tf.keras.metrics.TopKCategoricalAccuracy(k=2, name="top2_accuracy"),
+        ],
+        "class_output": [
+            "accuracy",
+            tf.keras.metrics.TopKCategoricalAccuracy(k=3, name="top3_accuracy"),
+        ],
     }
 
     # Compile the model
@@ -184,21 +200,28 @@ def compile_model(model, learning_rate=0.001, superclass_weight=0.3):
         optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
         loss=losses,
         loss_weights=loss_weights,
-        metrics=metrics
+        metrics=metrics,
     )
 
     return model
 
 
-if __name__ == "__main__":
-    # Test the model creation functions
-    model = create_hierarchical_model()
-    model = compile_model(model)
+def get_model_summary(model: tf.keras.Model) -> str:
+    """
+    Get a string representation of the model architecture.
 
-    model.summary()
+    Args:
+        model: Keras Model
 
-    # Print model outputs
-    print(f"\nModel inputs: {model.input_shape}")
-    print(f"Model outputs:")
-    for output in model.outputs:
-        print(f"  - {output.name}: {output.shape}")
+    Returns:
+        String containing the model summary
+    """
+    # Import io here to avoid unused import at module level
+    import io
+
+    summary_buffer = io.StringIO()
+    model.summary(print_fn=lambda x: summary_buffer.write(x + "\n"))
+    summary_string = summary_buffer.getvalue()
+    summary_buffer.close()
+
+    return summary_string

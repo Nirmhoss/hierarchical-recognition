@@ -5,275 +5,306 @@ This module contains functions for training the hierarchical classification mode
 including callbacks and training loop implementation.
 """
 
-import os
-import tensorflow as tf
-import numpy as np
-import time
 import json
+import os
+import time
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
+import tensorflow as tf
 from tensorflow.keras.callbacks import (
-    ModelCheckpoint, EarlyStopping, ReduceLROnPlateau,
-    TensorBoard, CSVLogger
+    CSVLogger,
+    EarlyStopping,
+    ModelCheckpoint,
+    ReduceLROnPlateau,
+    TensorBoard,
 )
 
+from data_utils import create_data_generators
 
-def create_callbacks(model_name="hierarchical_model",
-                     checkpoints_dir="checkpoints",
-                     logs_dir="logs"):
+
+def create_callbacks(
+    model_path: str,
+    patience: int = 10,
+    log_dir: Optional[str] = None,
+) -> List[tf.keras.callbacks.Callback]:
     """
     Create a list of callbacks for model training.
 
     Args:
-        model_name: Name of the model for saving files
-        checkpoints_dir: Directory to save model checkpoints
-        logs_dir: Directory to save training logs
+        model_path: Path to save the best model
+        patience: Patience for early stopping and LR reduction
+        log_dir: Directory for TensorBoard logs
 
     Returns:
-        A list of Keras callbacks
+        List of Keras callbacks
     """
-    # Create directories if they don't exist
-    os.makedirs(checkpoints_dir, exist_ok=True)
-    os.makedirs(logs_dir, exist_ok=True)
+    # Create directory for the model if it doesn't exist
+    os.makedirs(os.path.dirname(model_path), exist_ok=True)
 
-    # Current time for unique filenames
-    timestamp = time.strftime("%Y%m%d-%H%M%S")
-
-    # Model checkpoint to save the best model
-    checkpoint_filepath = os.path.join(
-        checkpoints_dir,
-        f"{model_name}_{timestamp}_best.h5"
-    )
-    model_checkpoint = ModelCheckpoint(
-        filepath=checkpoint_filepath,
+    # ModelCheckpoint to save the best model
+    checkpoint = ModelCheckpoint(
+        filepath=model_path,
+        monitor="val_loss",
         save_best_only=True,
-        monitor='val_loss',
-        mode='min',
         save_weights_only=False,
-        verbose=1
+        mode="min",
+        verbose=1,
     )
 
     # Early stopping to prevent overfitting
     early_stopping = EarlyStopping(
-        monitor='val_loss',
-        patience=15,
+        monitor="val_loss",
+        patience=patience,
         restore_best_weights=True,
-        verbose=1
+        verbose=1,
     )
 
-    # Reduce learning rate when validation loss plateaus
+    # Reduce learning rate when a metric has stopped improving
     reduce_lr = ReduceLROnPlateau(
-        monitor='val_loss',
+        monitor="val_loss",
         factor=0.2,
-        patience=5,
+        patience=patience // 2,
         min_lr=1e-6,
-        verbose=1
+        verbose=1,
     )
 
-    # TensorBoard for visualization
-    tensorboard = TensorBoard(
-        log_dir=os.path.join(logs_dir, f"{model_name}_{timestamp}"),
-        histogram_freq=1,
-        write_graph=True
-    )
+    # Base callbacks list
+    callbacks = [checkpoint, early_stopping, reduce_lr]
 
-    # CSV Logger to save training metrics
-    csv_log_file = os.path.join(
-        logs_dir,
-        f"{model_name}_{timestamp}_training_log.csv"
-    )
-    csv_logger = CSVLogger(
-        csv_log_file,
-        append=True,
-        separator=','
-    )
+    # Add TensorBoard callback if log_dir is provided
+    if log_dir:
+        os.makedirs(log_dir, exist_ok=True)
 
-    # Return all callbacks
-    return [
-        model_checkpoint,
-        early_stopping,
-        reduce_lr,
-        tensorboard,
-        csv_logger
-    ]
+        # Create a unique log directory based on timestamp
+        log_dir = os.path.join(log_dir, f"run_{int(time.time())}")
+
+        tensorboard = TensorBoard(
+            log_dir=log_dir,
+            histogram_freq=1,
+            write_graph=True,
+            update_freq="epoch",
+        )
+
+        callbacks.append(tensorboard)
+
+    # Add CSV logger to record training metrics
+    csv_log_path = os.path.join(os.path.dirname(model_path), "training_log.csv")
+    csv_logger = CSVLogger(csv_log_path, append=True, separator=",")
+    callbacks.append(csv_logger)
+
+    return callbacks
 
 
-class HierarchicalLearningRateScheduler(tf.keras.callbacks.Callback):
+# Split long function to reduce local variables
+
+
+def _prepare_training_data(
+    train_data: Tuple[np.ndarray, np.ndarray, np.ndarray],
+    validation_data: Tuple[np.ndarray, np.ndarray, np.ndarray],
+    batch_size: int,
+    use_augmentation: bool,
+) -> Tuple[tf.keras.utils.Sequence, Dict[str, np.ndarray], Dict[str, np.ndarray]]:
     """
-    Custom learning rate scheduler that adjusts learning rate based on
-    both superclass and class accuracy.
-    """
-
-    def __init__(self, initial_lr=0.001, decay_factor=0.75,
-                 superclass_threshold=0.9, class_threshold=0.85):
-        super(HierarchicalLearningRateScheduler, self).__init__()
-        self.initial_lr = initial_lr
-        self.decay_factor = decay_factor
-        self.superclass_threshold = superclass_threshold
-        self.class_threshold = class_threshold
-
-    def on_epoch_end(self, epoch, logs=None):
-        logs = logs or {}
-
-        # Get current validation accuracies
-        superclass_acc = logs.get('val_superclass_output_accuracy', 0)
-        class_acc = logs.get('val_class_output_accuracy', 0)
-
-        # Get current learning rate
-        current_lr = tf.keras.backend.get_value(self.model.optimizer.lr)
-
-        # Reduce learning rate if both accuracies are above their thresholds
-        if superclass_acc > self.superclass_threshold and class_acc > self.class_threshold:
-            new_lr = current_lr * self.decay_factor
-            tf.keras.backend.set_value(self.model.optimizer.lr, new_lr)
-            print(f"\nEpoch {epoch + 1}: Both accuracies above thresholds. "
-                  f"Reducing learning rate from {current_lr:.6f} to {new_lr:.6f}")
-
-
-def train_model(model,
-                train_generator,
-                val_generator,
-                steps_per_epoch,
-                validation_steps,
-                epochs=50,
-                callbacks=None,
-                model_name="hierarchical_model",
-                save_dir="models"):
-    """
-    Train the hierarchical model.
+    Prepare training data and generators.
 
     Args:
-        model: Compiled Keras model
-        train_generator: Generator for training data
-        val_generator: Generator for validation data
-        steps_per_epoch: Number of batches per epoch
-        validation_steps: Number of validation batches
-        epochs: Number of training epochs
-        callbacks: List of Keras callbacks
-        model_name: Name of the model for saving
-        save_dir: Directory to save the final model
-
-    Returns:
-        Training history and path to the saved model
-    """
-    # Create save directory if it doesn't exist
-    os.makedirs(save_dir, exist_ok=True)
-
-    # Add default callbacks if none provided
-    if callbacks is None:
-        callbacks = create_callbacks(model_name=model_name)
-
-    # Train the model
-    print(f"Starting training for {epochs} epochs...")
-    history = model.fit(
-        train_generator,
-        steps_per_epoch=steps_per_epoch,
-        epochs=epochs,
-        validation_data=val_generator,
-        validation_steps=validation_steps,
-        callbacks=callbacks,
-        verbose=1
-    )
-
-    # Save the final model
-    timestamp = time.strftime("%Y%m%d-%H%M%S")
-    model_path = os.path.join(save_dir, f"{model_name}_{timestamp}_final.h5")
-    model.save(model_path)
-    print(f"Model saved to {model_path}")
-
-    # Save training history
-    history_path = os.path.join(save_dir, f"{model_name}_{timestamp}_history.json")
-    with open(history_path, 'w') as f:
-        # Convert numpy values to Python native types for JSON serialization
-        history_dict = {}
-        for key, value in history.history.items():
-            history_dict[key] = [float(x) for x in value]
-        json.dump(history_dict, f, indent=4)
-    print(f"Training history saved to {history_path}")
-
-    return history, model_path
-
-
-def load_trained_model(model_path):
-    """
-    Load a trained model from file.
-
-    Args:
-        model_path: Path to the saved model file
-
-    Returns:
-        Loaded Keras model
-    """
-    print(f"Loading model from {model_path}...")
-    model = tf.keras.models.load_model(model_path)
-    return model
-
-
-def create_training_config(epochs=50,
-                           batch_size=64,
-                           learning_rate=0.001,
-                           superclass_weight=0.3,
-                           data_augmentation=True,
-                           early_stopping_patience=15,
-                           model_type="cnn"):
-    """
-    Create a configuration dictionary for training parameters.
-
-    Args:
-        epochs: Number of training epochs
+        train_data: Tuple of (x_train, y_train_super, y_train_class)
+        validation_data: Tuple of (x_val, y_val_super, y_val_class)
         batch_size: Batch size for training
-        learning_rate: Initial learning rate
-        superclass_weight: Weight for superclass loss
-        data_augmentation: Whether to use data augmentation
-        early_stopping_patience: Number of epochs with no improvement before stopping
-        model_type: Type of model ("cnn" or "resnet")
+        use_augmentation: Whether to use data augmentation
 
     Returns:
-        Dictionary of training parameters
+        Tuple of (train_generator, validation_x, validation_y)
     """
-    config = {
-        "epochs": epochs,
-        "batch_size": batch_size,
-        "learning_rate": learning_rate,
-        "superclass_weight": superclass_weight,
-        "data_augmentation": data_augmentation,
-        "early_stopping_patience": early_stopping_patience,
-        "model_type": model_type,
-        "timestamp": time.strftime("%Y%m%d-%H%M%S")
+    # Unpack data
+    x_train, y_train_super, y_train_class = train_data
+    x_val, y_val_super, y_val_class = validation_data
+
+    # Create data generators for training
+    if use_augmentation:
+        train_generator = create_data_generators(
+            x_train,
+            y_train_super,
+            y_train_class,
+            batch_size=batch_size,
+            augment=True,
+        )
+    else:
+        train_generator = None
+
+    # Prepare validation data format
+    validation_x = x_val
+    validation_y = {
+        "superclass_output": y_val_super,
+        "class_output": y_val_class,
     }
 
-    return config
+    # Prepare training data format (when not using generator)
+    training_y = {
+        "superclass_output": y_train_super,
+        "class_output": y_train_class,
+    }
+
+    return train_generator, training_y, validation_y
 
 
-def save_training_config(config, save_dir="models"):
+def train_model(
+    model: tf.keras.Model,
+    train_data: Tuple[np.ndarray, np.ndarray, np.ndarray],
+    validation_data: Tuple[np.ndarray, np.ndarray, np.ndarray],
+    batch_size: int = 32,
+    epochs: int = 50,
+    model_path: str = "models/hierarchical_model.h5",
+    use_augmentation: bool = True,
+    log_dir: Optional[str] = "logs/",
+    class_weights: Optional[Dict[str, Dict[int, float]]] = None,
+) -> tf.keras.callbacks.History:
     """
-    Save training configuration to a file.
+    Train the hierarchical classification model.
 
     Args:
-        config: Dictionary of training parameters
-        save_dir: Directory to save the configuration
+        model: The model to train
+        train_data: Tuple of (x_train, y_train_super, y_train_class)
+        validation_data: Tuple of (x_val, y_val_super, y_val_class)
+        batch_size: Batch size for training
+        epochs: Number of training epochs
+        model_path: Path to save the best model
+        use_augmentation: Whether to use data augmentation
+        log_dir: Directory for TensorBoard logs
+        class_weights: Optional class weights for handling imbalanced data
 
     Returns:
-        Path to the saved configuration file
+        Training history object
     """
-    os.makedirs(save_dir, exist_ok=True)
+    # Create callbacks
+    callbacks = create_callbacks(model_path, patience=10, log_dir=log_dir)
 
-    config_path = os.path.join(
-        save_dir,
-        f"training_config_{config['timestamp']}.json"
+    # Prepare data
+    train_generator, training_y, validation_y = _prepare_training_data(
+        train_data, validation_data, batch_size, use_augmentation
     )
 
-    with open(config_path, 'w') as f:
-        json.dump(config, f, indent=4)
+    # Unpack data for clarity
+    x_train, _, _ = train_data
+    x_val, _, _ = validation_data
 
-    print(f"Training configuration saved to {config_path}")
-    return config_path
+    # Train using the appropriate method
+    if use_augmentation and train_generator is not None:
+        # Train using the generator
+        history = model.fit(
+            train_generator,
+            epochs=epochs,
+            steps_per_epoch=len(x_train) // batch_size,
+            validation_data=(x_val, validation_y),
+            callbacks=callbacks,
+            class_weight=class_weights,
+            verbose=1,
+        )
+    else:
+        # Train without augmentation
+        history = model.fit(
+            x=x_train,
+            y=training_y,
+            batch_size=batch_size,
+            epochs=epochs,
+            validation_data=(x_val, validation_y),
+            callbacks=callbacks,
+            class_weight=class_weights,
+            verbose=1,
+        )
+
+    # Save training history to JSON
+    save_training_history(
+        history, os.path.join(os.path.dirname(model_path), "training_history.json")
+    )
+
+    return history
 
 
-if __name__ == "__main__":
-    # Test creating callbacks
-    callbacks = create_callbacks()
-    print(f"Created {len(callbacks)} callbacks")
+def calculate_class_weights(
+    y_train: np.ndarray, y_train_super: np.ndarray
+) -> Dict[str, Dict[int, float]]:
+    """
+    Calculate class weights to handle class imbalance.
 
-    # Test creating and saving a training configuration
-    config = create_training_config()
-    config_path = save_training_config(config)
-    print(f"Configuration saved to {config_path}")
+    Args:
+        y_train: Original class labels (integers)
+        y_train_super: Superclass labels (one-hot encoded)
+
+    Returns:
+        Dictionary of class weights for each output
+    """
+    # Calculate class weights for fine-grained classes
+    class_counts = np.bincount(y_train)
+    n_samples = len(y_train)
+
+    class_weights = {}
+    for i, count in enumerate(class_counts):
+        # More weight for less frequent classes
+        class_weights[i] = n_samples / (len(class_counts) * count)
+
+    # Calculate weights for superclasses
+    superclass_indices = np.argmax(y_train_super, axis=1)
+    superclass_counts = np.bincount(superclass_indices)
+
+    superclass_weights = {}
+    for i, count in enumerate(superclass_counts):
+        superclass_weights[i] = n_samples / (len(superclass_counts) * count)
+
+    # Return weights for both outputs
+    return {
+        "superclass_output": superclass_weights,
+        "class_output": class_weights,
+    }
+
+
+def save_training_history(history: tf.keras.callbacks.History, file_path: str) -> None:
+    """
+    Save training history to a JSON file.
+
+    Args:
+        history: Keras training history object
+        file_path: Path to save the history
+    """
+    # Create directory if it doesn't exist
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+    # Convert history.history to a serializable format
+    # (numpy arrays aren't directly JSON serializable)
+    history_dict = {}
+    for key, values in history.history.items():
+        history_dict[key] = [float(val) for val in values]
+
+    try:
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(history_dict, f, indent=4)
+        print(f"Training history saved to {file_path}")
+    except IOError as e:
+        print(f"Error saving training history: {e}")
+
+
+def load_training_history(file_path: str) -> Dict[str, List[float]]:
+    """
+    Load training history from a JSON file.
+
+    Args:
+        file_path: Path to the saved history file
+
+    Returns:
+        Dictionary containing training history
+
+    Raises:
+        FileNotFoundError: If the history file doesn't exist
+    """
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"Training history file not found: {file_path}")
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            history_dict = json.load(f)
+        # Explicitly cast to satisfy mypy
+        return {k: [float(v) for v in vals] for k, vals in history_dict.items()}
+    except (IOError, json.JSONDecodeError) as e:
+        print(f"Error loading training history: {e}")
+        raise

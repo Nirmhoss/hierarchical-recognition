@@ -1,0 +1,38 @@
+[MASTER]
+ignore=CVS,results,test_images
+ignore-patterns=
+
+persistent=yes
+load-plugins=
+
+[MESSAGES CONTROL]
+disable=
+    # Disabled because they conflict with Black or our code style
+    C0111, # missing-docstring
+    C0103, # invalid-name
+    C0330, # bad-continuation (conflicts with Black)
+    C0326, # bad-whitespace (conflicts with Black)
+    W0511, # fixme (allow TODOs)
+    R0903, # too-few-public-methods
+    R0913, # too-many-arguments
+    W0621, # redefined-outer-name (common in TensorFlow applications)
+
+[REPORTS]
+output-format=text
+reports=yes
+evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)
+
+[BASIC]
+good-names=i,j,k,ex,Run,_,id,db,x,y,X,Y
+
+[FORMAT]
+max-line-length=100
+
+[DESIGN]
+max-args=8
+max-attributes=12
+
+[TYPECHECK]
+# List of members which are set dynamically and missed by pylint inference
+generated-members=numpy.*,tensorflow.*,tf.*
+ignored-classes=numpy.*,tensorflow.*,tf.*
