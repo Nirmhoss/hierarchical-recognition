@@ -1,0 +1,5 @@
+lint.py:122: error: Incompatible default for argument "exclude_dirs" (default has type "None", argument has type "set[str]")  [assignment]
+lint.py:122: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+lint.py:122: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+lint.py:434: error: "Callable[[], None]" has no attribute "previous_issues"  [attr-defined]
+Found 2 errors in 1 file (checked 1 source file)

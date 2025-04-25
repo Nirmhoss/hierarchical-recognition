@@ -1,0 +1,205 @@
+************* Module C:\Users\misha\Desktop\hierarchical-recognition\.pylintrc
+.pylintrc:1:0: R0022: Useless option value for '--disable', 'C0330' was removed from pylint, see https://github.com/pylint-dev/pylint/pull/3571. (useless-option-value)
+.pylintrc:1:0: R0022: Useless option value for '--disable', 'C0326' was removed from pylint, see https://github.com/pylint-dev/pylint/pull/3577. (useless-option-value)
+************* Module data_utils
+data_utils.py:13:0: E0401: Unable to import 'tensorflow.keras.datasets' (import-error)
+data_utils.py:13:0: E0611: No name 'keras' in module 'tensorflow' (no-name-in-module)
+data_utils.py:14:0: E0401: Unable to import 'tensorflow.keras.utils' (import-error)
+data_utils.py:14:0: E0611: No name 'keras' in module 'tensorflow' (no-name-in-module)
+************* Module main
+main.py:154:13: W0612: Unused variable 'y_train_super' (unused-variable)
+main.py:154:28: W0612: Unused variable 'y_train_class' (unused-variable)
+main.py:253:11: W0718: Catching too general exception Exception (broad-exception-caught)
+main.py:11:0: W0611: Unused Optional imported from typing (unused-import)
+************* Module model
+model.py:11:0: E0401: Unable to import 'tensorflow.keras.layers' (import-error)
+model.py:11:0: E0611: No name 'keras' in module 'tensorflow' (no-name-in-module)
+model.py:21:0: E0401: Unable to import 'tensorflow.keras.models' (import-error)
+model.py:21:0: E0611: No name 'keras' in module 'tensorflow' (no-name-in-module)
+model.py:22:0: E0401: Unable to import 'tensorflow.keras.regularizers' (import-error)
+model.py:22:0: E0611: No name 'keras' in module 'tensorflow' (no-name-in-module)
+model.py:220:4: C0415: Import outside toplevel (io) (import-outside-toplevel)
+************* Module train
+train.py:15:0: E0401: Unable to import 'tensorflow.keras.callbacks' (import-error)
+train.py:15:0: E0611: No name 'keras' in module 'tensorflow' (no-name-in-module)
+train.py:137:4: W0612: Unused variable 'validation_x' (unused-variable)
+train.py:152:0: R0914: Too many local variables (16/15) (too-many-locals)
+************* Module visualize
+visualize.py:16:0: C0413: Import "import matplotlib.pyplot as plt" should be placed at the top of the module (wrong-import-position)
+visualize.py:17:0: C0413: Import "import seaborn as sns" should be placed at the top of the module (wrong-import-position)
+visualize.py:18:0: C0413: Import "import tensorflow as tf" should be placed at the top of the module (wrong-import-position)
+visualize.py:20:0: C0413: Import "from data_utils import CLASS_NAMES, SUPERCLASS_NAMES" should be placed at the top of the module (wrong-import-position)
+visualize.py:52:4: W0612: Unused variable 'fig' (unused-variable)
+visualize.py:203:0: R0914: Too many local variables (17/15) (too-many-locals)
+visualize.py:277:0: R0914: Too many local variables (27/15) (too-many-locals)
+visualize.py:314:4: W0612: Unused variable 'fig' (unused-variable)
+visualize.py:390:0: R0914: Too many local variables (18/15) (too-many-locals)
+visualize.py:428:4: W0612: Unused variable 'fig' (unused-variable)
+visualize.py:16:0: C0412: Imports from package matplotlib are not grouped (ungrouped-imports)
+************* Module scripts.lint
+scripts\lint.py:216:0: C0301: Line too long (108/100) (line-too-long)
+scripts\lint.py:236:0: C0301: Line too long (107/100) (line-too-long)
+scripts\lint.py:256:0: C0301: Line too long (101/100) (line-too-long)
+scripts\lint.py:276:0: C0301: Line too long (111/100) (line-too-long)
+scripts\lint.py:312:0: C0301: Line too long (107/100) (line-too-long)
+scripts\lint.py:313:0: C0301: Line too long (118/100) (line-too-long)
+scripts\lint.py:318:0: C0301: Line too long (103/100) (line-too-long)
+scripts\lint.py:323:0: C0301: Line too long (105/100) (line-too-long)
+scripts\lint.py:325:0: C0301: Line too long (122/100) (line-too-long)
+scripts\lint.py:330:0: C0301: Line too long (106/100) (line-too-long)
+scripts\lint.py:336:0: C0301: Line too long (108/100) (line-too-long)
+scripts\lint.py:337:0: C0301: Line too long (101/100) (line-too-long)
+scripts\lint.py:341:0: C0301: Line too long (105/100) (line-too-long)
+scripts\lint.py:342:0: C0301: Line too long (108/100) (line-too-long)
+scripts\lint.py:6:0: W0105: String statement has no effect (pointless-string-statement)
+scripts\lint.py:12:0: C0413: Import "import argparse" should be placed at the top of the module (wrong-import-position)
+scripts\lint.py:13:0: C0413: Import "import os" should be placed at the top of the module (wrong-import-position)
+scripts\lint.py:14:0: C0413: Import "import re" should be placed at the top of the module (wrong-import-position)
+scripts\lint.py:17:0: C0413: Import "import subprocess" should be placed at the top of the module (wrong-import-position)
+scripts\lint.py:18:0: C0413: Import "from pathlib import Path" should be placed at the top of the module (wrong-import-position)
+scripts\lint.py:19:0: C0413: Import "from typing import Dict, List, Optional, Set, Tuple" should be placed at the top of the module (wrong-import-position)
+scripts\lint.py:94:11: W0718: Catching too general exception Exception (broad-exception-caught)
+scripts\lint.py:100:0: R0911: Too many return statements (7/6) (too-many-return-statements)
+scripts\lint.py:123:0: R0911: Too many return statements (8/6) (too-many-return-statements)
+scripts\lint.py:412:4: W0603: Using the global statement (global-statement)
+scripts\lint.py:471:28: W1309: Using an f-string that does not have any interpolated variables (f-string-without-interpolation)
+scripts\lint.py:410:0: R0912: Too many branches (17/12) (too-many-branches)
+scripts\lint.py:410:0: R0915: Too many statements (57/50) (too-many-statements)
+
+
+Report
+======
+733 statements analysed.
+
+Statistics by type
+------------------
+
++---------+-------+-----------+-----------+------------+---------+
+|type     |number |old number |difference |%documented |%badname |
++=========+=======+===========+===========+============+=========+
+|module   |7      |7          |=          |100.00      |0.00     |
++---------+-------+-----------+-----------+------------+---------+
+|class    |0      |NC         |NC         |0           |0        |
++---------+-------+-----------+-----------+------------+---------+
+|method   |0      |NC         |NC         |0           |0        |
++---------+-------+-----------+-----------+------------+---------+
+|function |44     |39         |+5.00      |100.00      |0.00     |
++---------+-------+-----------+-----------+------------+---------+
+
+
+
+External dependencies
+---------------------
+::
+
+    data_utils (evaluate,main,model,train,visualize)
+    evaluate (main)
+    matplotlib (visualize)
+      \-pyplot (visualize)
+    model (main)
+    numpy (data_utils,evaluate,train,visualize)
+    seaborn (visualize)
+    sklearn 
+      \-metrics (evaluate)
+    tensorflow (data_utils,evaluate,main,model,train,visualize)
+    train (main)
+    visualize (main)
+
+
+
+2351 lines have been analyzed
+
+Raw metrics
+-----------
+
++----------+-------+------+---------+-----------+
+|type      |number |%     |previous |difference |
++==========+=======+======+=========+===========+
+|code      |1196   |50.87 |1148     |+48.00     |
++----------+-------+------+---------+-----------+
+|docstring |562    |23.90 |497      |+65.00     |
++----------+-------+------+---------+-----------+
+|comment   |199    |8.46  |177      |+22.00     |
++----------+-------+------+---------+-----------+
+|empty     |394    |16.76 |357      |+37.00     |
++----------+-------+------+---------+-----------+
+
+
+
+Duplication
+-----------
+
++-------------------------+------+---------+-----------+
+|                         |now   |previous |difference |
++=========================+======+=========+===========+
+|nb duplicated lines      |0     |0        |0          |
++-------------------------+------+---------+-----------+
+|percent duplicated lines |0.000 |0.000    |=          |
++-------------------------+------+---------+-----------+
+
+
+
+Messages by category
+--------------------
+
++-----------+-------+---------+-----------+
+|type       |number |previous |difference |
++===========+=======+=========+===========+
+|convention |26     |33       |33         |
++-----------+-------+---------+-----------+
+|refactor   |8      |18       |18         |
++-----------+-------+---------+-----------+
+|warning    |12     |55       |55         |
++-----------+-------+---------+-----------+
+|error      |12     |12       |12         |
++-----------+-------+---------+-----------+
+
+
+
+Messages
+--------
+
++-------------------------------+------------+
+|message id                     |occurrences |
++===============================+============+
+|line-too-long                  |14          |
++-------------------------------+------------+
+|wrong-import-position          |10          |
++-------------------------------+------------+
+|unused-variable                |6           |
++-------------------------------+------------+
+|no-name-in-module              |6           |
++-------------------------------+------------+
+|import-error                   |6           |
++-------------------------------+------------+
+|too-many-locals                |4           |
++-------------------------------+------------+
+|useless-option-value           |2           |
++-------------------------------+------------+
+|too-many-return-statements     |2           |
++-------------------------------+------------+
+|broad-exception-caught         |2           |
++-------------------------------+------------+
+|unused-import                  |1           |
++-------------------------------+------------+
+|ungrouped-imports              |1           |
++-------------------------------+------------+
+|too-many-statements            |1           |
++-------------------------------+------------+
+|too-many-branches              |1           |
++-------------------------------+------------+
+|pointless-string-statement     |1           |
++-------------------------------+------------+
+|import-outside-toplevel        |1           |
++-------------------------------+------------+
+|global-statement               |1           |
++-------------------------------+------------+
+|f-string-without-interpolation |1           |
++-------------------------------+------------+
+
+
+
+
+------------------------------------------------------------------
+Your code has been rated at 8.55/10 (previous run: 7.63/10, +0.92)
+

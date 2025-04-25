@@ -1,0 +1,27 @@
+.\lint.py:11:1: F401 'sys' imported but unused
+.\lint.py:14:1: F401 'typing.Any' imported but unused
+.\lint.py:14:1: F401 'typing.Optional' imported but unused
+.\lint.py:183:9: F841 local variable 'flake8_result' is assigned to but never used
+.\lint.py:194:101: E501 line too long (108 > 100 characters)
+.\lint.py:201:9: F841 local variable 'pylint_result' is assigned to but never used
+.\lint.py:213:101: E501 line too long (107 > 100 characters)
+.\lint.py:220:9: F841 local variable 'mypy_result' is assigned to but never used
+.\lint.py:232:101: E501 line too long (101 > 100 characters)
+.\lint.py:239:9: F841 local variable 'bandit_result' is assigned to but never used
+.\lint.py:251:101: E501 line too long (111 > 100 characters)
+.\lint.py:278:101: E501 line too long (113 > 100 characters)
+.\lint.py:283:29: F541 f-string is missing placeholders
+.\lint.py:283:101: E501 line too long (290 > 100 characters)
+.\lint.py:285:29: F541 f-string is missing placeholders
+.\lint.py:285:101: E501 line too long (259 > 100 characters)
+.\lint.py:287:29: F541 f-string is missing placeholders
+.\lint.py:287:101: E501 line too long (291 > 100 characters)
+.\lint.py:289:29: F541 f-string is missing placeholders
+.\lint.py:289:101: E501 line too long (252 > 100 characters)
+.\lint.py:291:29: F541 f-string is missing placeholders
+.\lint.py:291:101: E501 line too long (273 > 100 characters)
+.\lint.py:293:29: F541 f-string is missing placeholders
+.\lint.py:293:101: E501 line too long (269 > 100 characters)
+.\lint.py:419:39: F541 f-string is missing placeholders
+.\lint.py:419:101: E501 line too long (103 > 100 characters)
+.\lint.py:442:11: W292 no newline at end of file

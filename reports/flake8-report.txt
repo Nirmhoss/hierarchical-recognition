@@ -1,0 +1,28 @@
+.\main.py:11:1: F401 'typing.Optional' imported but unused
+.\scripts\lint.py:5:1: E265 block comment should start with '# '
+.\scripts\lint.py:12:1: E402 module level import not at top of file
+.\scripts\lint.py:13:1: E402 module level import not at top of file
+.\scripts\lint.py:14:1: E402 module level import not at top of file
+.\scripts\lint.py:17:1: E402 module level import not at top of file
+.\scripts\lint.py:18:1: E402 module level import not at top of file
+.\scripts\lint.py:19:1: E402 module level import not at top of file
+.\scripts\lint.py:216:101: E501 line too long (108 > 100 characters)
+.\scripts\lint.py:236:101: E501 line too long (107 > 100 characters)
+.\scripts\lint.py:256:101: E501 line too long (101 > 100 characters)
+.\scripts\lint.py:276:101: E501 line too long (111 > 100 characters)
+.\scripts\lint.py:312:101: E501 line too long (107 > 100 characters)
+.\scripts\lint.py:313:101: E501 line too long (118 > 100 characters)
+.\scripts\lint.py:318:101: E501 line too long (103 > 100 characters)
+.\scripts\lint.py:323:101: E501 line too long (105 > 100 characters)
+.\scripts\lint.py:325:101: E501 line too long (122 > 100 characters)
+.\scripts\lint.py:330:101: E501 line too long (106 > 100 characters)
+.\scripts\lint.py:336:101: E501 line too long (108 > 100 characters)
+.\scripts\lint.py:337:101: E501 line too long (101 > 100 characters)
+.\scripts\lint.py:341:101: E501 line too long (105 > 100 characters)
+.\scripts\lint.py:342:101: E501 line too long (108 > 100 characters)
+.\scripts\lint.py:471:29: F541 f-string is missing placeholders
+.\train.py:137:5: F841 local variable 'validation_x' is assigned to but never used
+.\visualize.py:16:1: E402 module level import not at top of file
+.\visualize.py:17:1: E402 module level import not at top of file
+.\visualize.py:18:1: E402 module level import not at top of file
+.\visualize.py:20:1: E402 module level import not at top of file

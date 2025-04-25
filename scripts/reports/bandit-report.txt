@@ -1,0 +1,111 @@
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	running on Python 3.11.0
+Run started:2025-04-24 23:43:03.444614
+
+Test results:
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.7.5/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: .\lint.py:10:0
+9	import re
+10	import subprocess
+11	import sys
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.7.5/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: .\lint.py:47:17
+46	    try:
+47	        result = subprocess.run(
+48	            command,
+49	            capture_output=True,
+50	            text=True,
+51	            check=False,
+52	        )
+53	
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.7.5/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: .\lint.py:183:24
+182	    with open("reports/flake8-report.txt", "w") as f:
+183	        flake8_result = subprocess.run(
+184	            ["flake8"] + files,
+185	            stdout=f,
+186	            stderr=subprocess.STDOUT,
+187	            check=False,
+188	        )
+189	
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.7.5/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: .\lint.py:201:24
+200	    with open("reports/pylint-report.txt", "w") as f:
+201	        pylint_result = subprocess.run(
+202	            ["pylint"] + files,
+203	            stdout=f,
+204	            stderr=subprocess.STDOUT,
+205	            check=False,
+206	        )
+207	
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.7.5/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: .\lint.py:220:22
+219	    with open("reports/mypy-report.txt", "w") as f:
+220	        mypy_result = subprocess.run(
+221	            ["mypy"] + files,
+222	            stdout=f,
+223	            stderr=subprocess.STDOUT,
+224	            check=False,
+225	        )
+226	
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.7.5/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: .\lint.py:239:24
+238	    with open("reports/bandit-report.txt", "w") as f:
+239	        bandit_result = subprocess.run(
+240	            ["bandit", "-r"] + files,
+241	            stdout=f,
+242	            stderr=subprocess.STDOUT,
+243	            check=False,
+244	        )
+245	
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 325
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 6
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 6
+Files skipped (0):
